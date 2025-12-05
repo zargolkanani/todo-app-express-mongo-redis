@@ -1,0 +1,15 @@
+{
+  "name": "compare-performance",
+  "version": "1.0.0",
+  "main": "redis_test.js",
+  "license": "MIT",
+  "scripts": {
+    "test:redis": "node redis_test.js",
+    "test:mongo": "node mongo_test.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "mongodb": "^5.7.0",
+    "redis": "^4.6.7"
+  }
+}
