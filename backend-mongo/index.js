@@ -1,103 +1,71 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const { MongoClient, ObjectId } = require('mongodb');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const { MongoClient, ObjectId } = require("mongodb");
+const path = require("path");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = 3000;
 
 app.use(cors());
 app.use(express.json());
 
-// Mongo client
-const client = new MongoClient(process.env.MONGODB_URI, {
-  // options left default
+// ------- سرو فایل‌های استاتیک -------
+app.use(express.static(path.join(__dirname, "public")));
+
+// ------- Middleware API Key -------
+app.use("/api", (req, res, next) => {
+  const apiKey = req.headers['x-api-key'];
+  if (!apiKey || apiKey !== '123456') {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
 });
+
+// ------- MongoDB -------
 let db;
+const client = new MongoClient(process.env.MONGODB_URI);
 
 async function start() {
-  try {
-    await client.connect();
-    db = client.db(process.env.DB_NAME || 'todo_db');
-    console.log('Connected to MongoDB Atlas');
-    app.listen(port, () => console.log(`Mongo app running on port ${port}`));
-  } catch (err) {
-    console.error('Mongo connection error:', err);
-    process.exit(1);
-  }
+  await client.connect();
+  db = client.db(process.env.DB_NAME);
+  console.log("Connected to MongoDB Atlas");
+  app.listen(port, () => console.log(`MongoDB backend running on port ${port}`));
 }
 
-// CREATE
-app.post('/todos', async (req, res) => {
-  try {
-    const title = req.body.title || req.body.text;
-    if (!title) return res.status(400).json({ error: 'Title is required' });
+// ------- CRUD -------
+app.post("/api/todos", async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).json({ error: "Text is required" });
 
-    const result = await db.collection('todos').insertOne({
-      title,
-      completed: false,
-      createdAt: new Date()
-    });
-
-    res.json({ success: true, data: { _id: result.insertedId, title, completed: false } });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  const result = await db.collection("todos").insertOne({
+    text,
+    done: false,
+    createdAt: new Date(),
+  });
+  res.json({ id: result.insertedId, text, done: false });
 });
 
-// READ ALL
-app.get('/todos', async (req, res) => {
-  try {
-    const todos = await db.collection('todos').find().toArray();
-    res.json({ success: true, data: todos });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+app.get("/api/todos", async (req, res) => {
+  const todos = await db.collection("todos").find().toArray();
+  res.json({ data: todos.map(t => ({ id: t._id, text: t.text, done: t.done })) });
 });
 
-// UPDATE (edit fields or toggle)
-app.put('/todos/:id', async (req, res) => {
-  try {
-    const id = req.params.id;
-    const { title, completed } = req.body;
-
-    const update = {};
-    if (typeof title === 'string') update.title = title;
-    if (typeof completed === 'boolean') update.completed = completed;
-
-    // if no body, toggle completed
-    if (Object.keys(update).length === 0) {
-      const doc = await db.collection('todos').findOne({ _id: new ObjectId(id) });
-      if (!doc) return res.status(404).json({ error: 'Todo not found' });
-      update.completed = !doc.completed;
-    }
-
-    const result = await db.collection('todos').findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: update },
-      { returnDocument: 'after' }
-    );
-
-    if (!result.value) return res.status(404).json({ error: 'Todo not found' });
-    res.json({ success: true, data: result.value });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: 'Invalid ID or bad request' });
-  }
+app.put("/api/todos/:id", async (req, res) => {
+  const { text, done } = req.body;
+  const result = await db.collection("todos").findOneAndUpdate(
+    { _id: new ObjectId(req.params.id) },
+    { $set: { text, done } },
+    { returnDocument: "after" }
+  );
+  if (!result.value) return res.status(404).json({ error: "Todo not found" });
+  res.json({ id: result.value._id, text: result.value.text, done: result.value.done });
 });
 
-// DELETE
-app.delete('/todos/:id', async (req, res) => {
-  try {
-    const result = await db.collection('todos').deleteOne({ _id: new ObjectId(req.params.id) });
-    if (result.deletedCount === 0) return res.status(404).json({ error: 'Todo not found' });
-    res.json({ success: true, message: 'Todo deleted' });
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: 'Invalid ID or bad request' });
-  }
+app.delete("/api/todos/:id", async (req, res) => {
+  const result = await db.collection("todos").deleteOne({ _id: new ObjectId(req.params.id) });
+  if (result.deletedCount === 0) return res.status(404).json({ error: "Todo not found" });
+  res.json({ message: "Todo deleted" });
 });
 
 start();

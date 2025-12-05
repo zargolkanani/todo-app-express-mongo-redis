@@ -1,14 +1,17 @@
 {
   "name": "compare-performance",
   "version": "1.0.0",
-  "main": "redis_test.js",
-  "license": "MIT",
+  "description": "Compare Redis and MongoDB Atlas performance",
+  "type": "module",
+  "main": "index.js",
   "scripts": {
-    "test:redis": "node redis_test.js",
-    "test:mongo": "node mongo_test.js"
+    "start": "node index.js",
+    "redis-test": "node redis_test.js",
+    "mongo-test": "node mongo_test.js"
   },
   "dependencies": {
-    "dotenv": "^16.0.0",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
     "mongodb": "^5.7.0",
     "redis": "^4.6.7"
   }

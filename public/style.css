@@ -1,0 +1,88 @@
+body {
+    font-family: Tahoma, sans-serif;
+    background-color: #FFF8E7;
+    color: #4B3B2A;
+    margin: 20px;
+    direction: rtl;
+}
+
+#header h1 {
+    text-align: center;
+}
+
+#shamsi-date {
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+#backend-switch {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#add-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#newTodo {
+    width: 60%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #C2A385;
+}
+
+.add-btn {
+    padding: 10px 15px;
+    border-radius: 50%;
+    border: none;
+    background-color: #C2A385;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.add-btn:hover {
+    background-color: #A67C52;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background-color: #FFECD1;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+li span {
+    cursor: pointer;
+    flex: 1;
+}
+
+.done-text {
+    text-decoration: line-through;
+    color: #8B7D6B;
+}
+
+button.edit-btn, button.delete-btn {
+    background-color: #C2A385;
+    border: none;
+    color: white;
+    margin-left: 5px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button.edit-btn:hover, button.delete-btn:hover {
+    background-color: #A67C52;
+}

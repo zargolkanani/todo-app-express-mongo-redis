@@ -1,31 +1,41 @@
-require('dotenv').config();
-const { MongoClient } = require('mongodb');
+import dotenv from 'dotenv';
+dotenv.config();
+
+import { MongoClient } from 'mongodb';
 
 async function testMongo() {
-  const client = new MongoClient(process.env.MONGO_URL);
-  await client.connect();
-  const db = client.db('test_db');
-  const col = db.collection('perf_todos');
-
-  console.log('Testing MongoDB Atlas (1000 items)...');
-
-  const data = { title: 'todo item' };
-
-  // Insert 1000 items
-  let start = Date.now();
-  for (let i = 0; i < 1000; i++) {
-    await col.insertOne(data);
+  if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI is not defined!');
+    process.exit(1);
   }
-  let end = Date.now();
-  console.log('MongoDB Insert Time:', end - start, 'ms');
 
-  // Read 1000 items
-  start = Date.now();
-  await col.find({}).toArray();
-  end = Date.now();
-  console.log('MongoDB Read Time:', end - start, 'ms');
+  const client = new MongoClient(process.env.MONGODB_URI);
 
-  await client.close();
+  try {
+    await client.connect();
+    console.log('Connected to MongoDB ✅');
+
+    const db = client.db('todo_db');
+    const todos = db.collection('todos');
+
+    const doc = { title: 'Hello MongoDB', createdAt: new Date() };
+
+    const startInsert = Date.now();
+    const result = await todos.insertOne(doc);
+    const endInsert = Date.now();
+
+    console.log(`MongoDB INSERT time: ${endInsert - startInsert} ms | InsertedId: ${result.insertedId}`);
+
+    const startFind = Date.now();
+    const found = await todos.findOne({ _id: result.insertedId });
+    const endFind = Date.now();
+
+    console.log(`MongoDB FIND time: ${endFind - startFind} ms | Value: ${found.title}`);
+  } catch (err) {
+    console.error('MongoDB Error:', err);
+  } finally {
+    await client.close();
+  }
 }
 
-testMongo().catch((e) => console.error(e));
+testMongo();

@@ -1,31 +1,27 @@
-require('dotenv').config();
-const { createClient } = require('redis');
+// redis_test.js
+import { createClient } from "redis";
+import dotenv from "dotenv";
+dotenv.config();
 
 async function testRedis() {
-  const client = createClient({ url: process.env.REDIS_URL });
-  await client.connect();
+  const redisClient = createClient({ url: process.env.REDIS_URL });
 
-  console.log('Testing Redis (1000 items)...');
+  redisClient.on("error", (err) => console.log("Redis Client Error:", err));
 
-  const data = { title: 'todo item' };
+  await redisClient.connect();
+  console.log("Connected to Redis ✅");
 
-  // Insert 1000 items
-  let start = Date.now();
-  for (let i = 0; i < 1000; i++) {
-    await client.set(`perf:todo:${i}`, JSON.stringify(data));
-  }
-  let end = Date.now();
-  console.log('Redis Insert Time:', end - start, 'ms');
+  const start = Date.now();
+  await redisClient.set("test_key", "Hello Redis");
+  const end = Date.now();
+  console.log("Redis SET time:", end - start, "ms");
 
-  // Read 1000 items
-  start = Date.now();
-  for (let i = 0; i < 1000; i++) {
-    await client.get(`perf:todo:${i}`);
-  }
-  end = Date.now();
-  console.log('Redis Read Time:', end - start, 'ms');
+  const startGet = Date.now();
+  const value = await redisClient.get("test_key");
+  const endGet = Date.now();
+  console.log("Redis GET time:", endGet - startGet, "ms", "| Value:", value);
 
-  await client.quit();
+  await redisClient.quit();
 }
 
-testRedis().catch((e) => console.error(e));
+testRedis();
